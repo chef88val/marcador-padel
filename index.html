@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcador Pádel</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont;
+    background: #111;
+    color: white;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 10px 0;
+  }
+
+  .container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+  }
+
+  .team {
+    width: 45%;
+    border: 2px solid #444;
+    border-radius: 12px;
+    padding: 10px;
+  }
+
+  .serve {
+    font-size: 2.5rem;
+    height: 50px;
+  }
+
+  .big {
+    font-size: 3.5rem;
+    margin: 5px 0;
+  }
+
+  button {
+    font-size: 1.4rem;
+    padding: 12px;
+    margin: 6px;
+    width: 90%;
+  }
+
+  .tie {
+    display: none;
+  }
+
+  .footer {
+    margin-top: 10px;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>🎾 Marcador Pádel</h1>
+
+<div class="container">
+
+  <!-- PAREJA A -->
+  <div class="team">
+    <div id="serveA" class="serve">🎾 A1</div>
+    <h2>Pareja A</h2>
+
+    <div>Sets</div>
+    <div id="setsA" class="big">0</div>
+
+    <div>Juegos</div>
+    <div id="gamesA" class="big">0</div>
+
+    <div id="tieA" class="big tie">0</div>
+
+    <button onclick="addGame('A')">+ Juego</button>
+    <button id="btnTieA" class="tie" onclick="addTie('A')">+ Tie</button>
+  </div>
+
+  <!-- PAREJA B -->
+  <div class="team">
+    <div id="serveB" class="serve" style="opacity:0.3">🎾 B1</div>
+    <h2>Pareja B</h2>
+
+    <div>Sets</div>
+    <div id="setsB" class="big">0</div>
+
+    <div>Juegos</div>
+    <div id="gamesB" class="big">0</div>
+
+    <div id="tieB" class="big tie">0</div>
+
+    <button onclick="addGame('B')">+ Juego</button>
+    <button id="btnTieB" class="tie" onclick="addTie('B')">+ Tie</button>
+  </div>
+
+</div>
+
+<div class="footer">
+  <button onclick="resetMatch()">🔄 Reset partido</button>
+</div>
+
+<script>
+/* ---------- ESTADO ---------- */
+let setsA = 0, setsB = 0;
+let gamesA = 0, gamesB = 0;
+let tieA = 0, tieB = 0;
+
+let tieBreak = false;
+
+/*
+  Orden de saque:
+  0 = A1
+  1 = B1
+  2 = A2
+  3 = B2
+*/
+let serverIndex = 0;
+
+/* ---------- JUEGOS ---------- */
+function addGame(team) {
+  if (tieBreak) return;
+
+  team === 'A' ? gamesA++ : gamesB++;
+  nextServer();
+  update();
+
+  // Set ganado normal
+  if ((gamesA >= 6 || gamesB >= 6) && Math.abs(gamesA - gamesB) >= 2) {
+    winSet();
+    return;
+  }
+
+  // Tie-break
+  if (gamesA === 6 && gamesB === 6) {
+    startTieBreak();
+  }
+}
+
+/* ---------- TIE-BREAK ---------- */
+function startTieBreak() {
+  tieBreak = true;
+  showTie(true);
+}
+
+function addTie(team) {
+  team === 'A' ? tieA++ : tieB++;
+
+  let totalPoints = tieA + tieB;
+
+  // Cambio de saque en tie-break:
+  // Punto 1 y luego cada 2 puntos
+  if (totalPoints === 1 || (totalPoints > 1 && totalPoints % 2 === 1)) {
+    nextServer();
+  }
+
+  update();
+
+  if ((tieA >= 7 || tieB >= 7) && Math.abs(tieA - tieB) >= 2) {
+    winSet();
+  }
+}
+
+/* ---------- SET ---------- */
+function winSet() {
+  if (gamesA > gamesB || tieA > tieB) setsA++;
+  else setsB++;
+
+  gamesA = gamesB = tieA = tieB = 0;
+  tieBreak = false;
+  showTie(false);
+
+  // Al empezar set, sigue el orden natural de saque
+  update();
+}
+
+/* ---------- SAQUE ---------- */
+function nextServer() {
+  serverIndex = (serverIndex + 1) % 4;
+}
+
+function updateServe() {
+  const serveA = document.getElementById('serveA');
+  const serveB = document.getElementById('serveB');
+
+  serveA.style.opacity = 0.3;
+  serveB.style.opacity = 0.3;
+
+  if (serverIndex === 0) { serveA.innerText = "🎾 A1"; serveA.style.opacity = 1; }
+  if (serverIndex === 1) { serveB.innerText = "🎾 B1"; serveB.style.opacity = 1; }
+  if (serverIndex === 2) { serveA.innerText = "🎾 A2"; serveA.style.opacity = 1; }
+  if (serverIndex === 3) { serveB.innerText = "🎾 B2"; serveB.style.opacity = 1; }
+}
+
+/* ---------- UI ---------- */
+function showTie(show) {
+  document.getElementById('tieA').style.display = show ? 'block' : 'none';
+  document.getElementById('tieB').style.display = show ? 'block' : 'none';
+  document.getElementById('btnTieA').style.display = show ? 'block' : 'none';
+  document.getElementById('btnTieB').style.display = show ? 'block' : 'none';
+}
+
+function update() {
+  setsAEl.innerText = setsA;
+  setsBEl.innerText = setsB;
+  gamesAEl.innerText = gamesA;
+  gamesBEl.innerText = gamesB;
+  tieAEl.innerText = tieA;
+  tieBEl.innerText = tieB;
+  updateServe();
+}
+
+/* ---------- RESET ---------- */
+function resetMatch() {
+  setsA = setsB = gamesA = gamesB = tieA = tieB = 0;
+  tieBreak = false;
+  serverIndex = 0;
+  showTie(false);
+  update();
+}
+
+/* ---------- ELEMENTOS ---------- */
+const setsAEl = document.getElementById('setsA');
+const setsBEl = document.getElementById('setsB');
+const gamesAEl = document.getElementById('gamesA');
+const gamesBEl = document.getElementById('gamesB');
+const tieAEl = document.getElementById('tieA');
+const tieBEl = document.getElementById('tieB');
+
+update();
+</script>
+
+</body>
+</html>
