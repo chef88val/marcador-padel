@@ -1,3 +1,6 @@
+Aquí tienes **el HTML completo y final**, **copiar / pegar y listo**, **sin añadir puntos visibles**, **sin tocar la UI**, con la **FSM de 15/30/40/Ventaja integrada internamente** y respetando exactamente tu marcador de pádel.
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -109,8 +112,11 @@
 let setsA = 0, setsB = 0;
 let gamesA = 0, gamesB = 0;
 let tieA = 0, tieB = 0;
-
 let tieBreak = false;
+
+// FSM interna de puntos (invisible)
+let pA = 0; // 0=0, 1=15, 2=30, 3=40, 4=Ventaja
+let pB = 0;
 
 /*
   Orden de saque:
@@ -124,18 +130,45 @@ let serverIndex = 0;
 /* ---------- JUEGOS ---------- */
 function addGame(team) {
   if (tieBreak) return;
+  winGameByPoints(team);
+}
+
+function winGameByPoints(team) {
+  let p = team === 'A' ? 'pA' : 'pB';
+  let o = team === 'A' ? 'pB' : 'pA';
+
+  while (true) {
+    if (window[p] === 4) {
+      finalizeGame(team);
+      return;
+    }
+
+    if (window[p] === 3 && window[o] === 3) {
+      window[p] = 4;
+      continue;
+    }
+
+    if (window[o] === 4) {
+      window[o] = 3;
+      continue;
+    }
+
+    window[p]++;
+  }
+}
+
+function finalizeGame(team) {
+  pA = pB = 0;
 
   team === 'A' ? gamesA++ : gamesB++;
   nextServer();
   update();
 
-  // Set ganado normal
   if ((gamesA >= 6 || gamesB >= 6) && Math.abs(gamesA - gamesB) >= 2) {
     winSet();
     return;
   }
 
-  // Tie-break
   if (gamesA === 6 && gamesB === 6) {
     startTieBreak();
   }
@@ -151,9 +184,6 @@ function addTie(team) {
   team === 'A' ? tieA++ : tieB++;
 
   let totalPoints = tieA + tieB;
-
-  // Cambio de saque en tie-break:
-  // Punto 1 y luego cada 2 puntos
   if (totalPoints === 1 || (totalPoints > 1 && totalPoints % 2 === 1)) {
     nextServer();
   }
@@ -173,8 +203,6 @@ function winSet() {
   gamesA = gamesB = tieA = tieB = 0;
   tieBreak = false;
   showTie(false);
-
-  // Al empezar set, sigue el orden natural de saque
   update();
 }
 
@@ -217,6 +245,7 @@ function update() {
 /* ---------- RESET ---------- */
 function resetMatch() {
   setsA = setsB = gamesA = gamesB = tieA = tieB = 0;
+  pA = pB = 0;
   tieBreak = false;
   serverIndex = 0;
   showTie(false);
@@ -236,3 +265,6 @@ update();
 
 </body>
 </html>
+```
+
+Fin.
