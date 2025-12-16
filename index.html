@@ -55,6 +55,11 @@
   .footer {
     margin-top: 10px;
   }
+
+  .points {
+    font-size: 2rem;
+    margin: 10px 0;
+  }
 </style>
 </head>
 
@@ -68,6 +73,9 @@
     <div id="serveA" class="serve">🎾 A1</div>
     <h2>Pareja A</h2>
 
+    <div>Puntos</div>
+    <div id="pointsA" class="points">0</div>
+
     <div>Sets</div>
     <div id="setsA" class="big">0</div>
 
@@ -76,13 +84,16 @@
 
     <div id="tieA" class="big tie">0</div>
 
-    <button onclick="addGame('A')">+ Juego</button>
+    <button onclick="point('A')">+ Punto</button>
     <button id="btnTieA" class="tie" onclick="addTie('A')">+ Tie</button>
   </div>
 
   <div class="team">
     <div id="serveB" class="serve" style="opacity:0.3">🎾 B1</div>
     <h2>Pareja B</h2>
+
+    <div>Puntos</div>
+    <div id="pointsB" class="points">0</div>
 
     <div>Sets</div>
     <div id="setsB" class="big">0</div>
@@ -92,7 +103,7 @@
 
     <div id="tieB" class="big tie">0</div>
 
-    <button onclick="addGame('B')">+ Juego</button>
+    <button onclick="point('B')">+ Punto</button>
     <button id="btnTieB" class="tie" onclick="addTie('B')">+ Tie</button>
   </div>
 
@@ -108,13 +119,88 @@ let gamesA = 0, gamesB = 0;
 let tieA = 0, tieB = 0;
 let tieBreak = false;
 
+// Puntos del juego actual (0=0, 1=15, 2=30, 3=40, 4=Ventaja)
+let pointsA = 0, pointsB = 0;
+
 let serverIndex = 0;
+
+/* ---------- PUNTOS ---------- */
+function point(team) {
+  if (tieBreak) {
+    addTie(team);
+    return;
+  }
+
+  if (team === 'A') {
+    // Ventaja → Juego
+    if (pointsA === 4) {
+      addGame('A');
+      return;
+    }
+
+    // Deuce → Ventaja
+    if (pointsA === 3 && pointsB === 3) {
+      pointsA = 4;
+      update();
+      return;
+    }
+
+    // Rival tenía ventaja → volver a Deuce
+    if (pointsB === 4) {
+      pointsB = 3;
+      update();
+      return;
+    }
+
+    // Progresión normal
+    pointsA++;
+    // Si llega a 40 y el rival tiene menos de 40, gana el juego
+    if (pointsA === 4 && pointsB < 3) {
+      addGame('A');
+      return;
+    }
+  } else {
+    // Ventaja → Juego
+    if (pointsB === 4) {
+      addGame('B');
+      return;
+    }
+
+    // Deuce → Ventaja
+    if (pointsB === 3 && pointsA === 3) {
+      pointsB = 4;
+      update();
+      return;
+    }
+
+    // Rival tenía ventaja → volver a Deuce
+    if (pointsA === 4) {
+      pointsA = 3;
+      update();
+      return;
+    }
+
+    // Progresión normal
+    pointsB++;
+    // Si llega a 40 y el rival tiene menos de 40, gana el juego
+    if (pointsB === 4 && pointsA < 3) {
+      addGame('B');
+      return;
+    }
+  }
+  
+  update();
+}
 
 /* ---------- JUEGOS ---------- */
 function addGame(team) {
   if (tieBreak) return;
 
   team === 'A' ? gamesA++ : gamesB++;
+  
+  // Reset puntos del juego
+  pointsA = pointsB = 0;
+  
   nextServer();
   update();
 
@@ -131,6 +217,7 @@ function addGame(team) {
 /* ---------- TIE ---------- */
 function startTieBreak() {
   tieBreak = true;
+  pointsA = pointsB = 0;
   showTie(true);
 }
 
@@ -153,6 +240,7 @@ function winSet() {
   else setsB++;
 
   gamesA = gamesB = tieA = tieB = 0;
+  pointsA = pointsB = 0;
   tieBreak = false;
   showTie(false);
   update();
@@ -180,7 +268,13 @@ function showTie(v) {
   btnTieA.style.display = btnTieB.style.display = v ? 'block' : 'none';
 }
 
+function labelPoints(v) {
+  return ['0', '15', '30', '40', 'A'][v];
+}
+
 function update() {
+  pointsAEl.innerText = labelPoints(pointsA);
+  pointsBEl.innerText = labelPoints(pointsB);
   setsAEl.innerText = setsA;
   setsBEl.innerText = setsB;
   gamesAEl.innerText = gamesA;
@@ -192,12 +286,15 @@ function update() {
 
 function resetMatch() {
   setsA = setsB = gamesA = gamesB = tieA = tieB = 0;
+  pointsA = pointsB = 0;
   tieBreak = false;
   serverIndex = 0;
   showTie(false);
   update();
 }
 
+const pointsAEl = document.getElementById('pointsA');
+const pointsBEl = document.getElementById('pointsB');
 const setsAEl = document.getElementById('setsA');
 const setsBEl = document.getElementById('setsB');
 const gamesAEl = document.getElementById('gamesA');
