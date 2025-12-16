@@ -64,7 +64,6 @@
 
 <div class="container">
 
-  <!-- PAREJA A -->
   <div class="team">
     <div id="serveA" class="serve">🎾 A1</div>
     <h2>Pareja A</h2>
@@ -81,7 +80,6 @@
     <button id="btnTieA" class="tie" onclick="addTie('A')">+ Tie</button>
   </div>
 
-  <!-- PAREJA B -->
   <div class="team">
     <div id="serveB" class="serve" style="opacity:0.3">🎾 B1</div>
     <h2>Pareja B</h2>
@@ -105,57 +103,16 @@
 </div>
 
 <script>
-/* ---------- ESTADO ---------- */
 let setsA = 0, setsB = 0;
 let gamesA = 0, gamesB = 0;
 let tieA = 0, tieB = 0;
 let tieBreak = false;
 
-// FSM interna de puntos (invisible)
-let pA = 0; // 0=0, 1=15, 2=30, 3=40, 4=Ventaja
-let pB = 0;
-
-/*
-  Orden de saque:
-  0 = A1
-  1 = B1
-  2 = A2
-  3 = B2
-*/
 let serverIndex = 0;
 
 /* ---------- JUEGOS ---------- */
 function addGame(team) {
   if (tieBreak) return;
-  winGameByPoints(team);
-}
-
-function winGameByPoints(team) {
-  let p = team === 'A' ? 'pA' : 'pB';
-  let o = team === 'A' ? 'pB' : 'pA';
-
-  while (true) {
-    if (window[p] === 4) {
-      finalizeGame(team);
-      return;
-    }
-
-    if (window[p] === 3 && window[o] === 3) {
-      window[p] = 4;
-      continue;
-    }
-
-    if (window[o] === 4) {
-      window[o] = 3;
-      continue;
-    }
-
-    window[p]++;
-  }
-}
-
-function finalizeGame(team) {
-  pA = pB = 0;
 
   team === 'A' ? gamesA++ : gamesB++;
   nextServer();
@@ -171,7 +128,7 @@ function finalizeGame(team) {
   }
 }
 
-/* ---------- TIE-BREAK ---------- */
+/* ---------- TIE ---------- */
 function startTieBreak() {
   tieBreak = true;
   showTie(true);
@@ -180,10 +137,8 @@ function startTieBreak() {
 function addTie(team) {
   team === 'A' ? tieA++ : tieB++;
 
-  let totalPoints = tieA + tieB;
-  if (totalPoints === 1 || (totalPoints > 1 && totalPoints % 2 === 1)) {
-    nextServer();
-  }
+  let total = tieA + tieB;
+  if (total === 1 || total % 2 === 1) nextServer();
 
   update();
 
@@ -209,24 +164,20 @@ function nextServer() {
 }
 
 function updateServe() {
-  const serveA = document.getElementById('serveA');
-  const serveB = document.getElementById('serveB');
+  const a = document.getElementById('serveA');
+  const b = document.getElementById('serveB');
+  a.style.opacity = b.style.opacity = 0.3;
 
-  serveA.style.opacity = 0.3;
-  serveB.style.opacity = 0.3;
-
-  if (serverIndex === 0) { serveA.innerText = "🎾 A1"; serveA.style.opacity = 1; }
-  if (serverIndex === 1) { serveB.innerText = "🎾 B1"; serveB.style.opacity = 1; }
-  if (serverIndex === 2) { serveA.innerText = "🎾 A2"; serveA.style.opacity = 1; }
-  if (serverIndex === 3) { serveB.innerText = "🎾 B2"; serveB.style.opacity = 1; }
+  if (serverIndex === 0) { a.innerText = "🎾 A1"; a.style.opacity = 1; }
+  if (serverIndex === 1) { b.innerText = "🎾 B1"; b.style.opacity = 1; }
+  if (serverIndex === 2) { a.innerText = "🎾 A2"; a.style.opacity = 1; }
+  if (serverIndex === 3) { b.innerText = "🎾 B2"; b.style.opacity = 1; }
 }
 
 /* ---------- UI ---------- */
-function showTie(show) {
-  document.getElementById('tieA').style.display = show ? 'block' : 'none';
-  document.getElementById('tieB').style.display = show ? 'block' : 'none';
-  document.getElementById('btnTieA').style.display = show ? 'block' : 'none';
-  document.getElementById('btnTieB').style.display = show ? 'block' : 'none';
+function showTie(v) {
+  tieAEl.style.display = tieBEl.style.display =
+  btnTieA.style.display = btnTieB.style.display = v ? 'block' : 'none';
 }
 
 function update() {
@@ -239,23 +190,22 @@ function update() {
   updateServe();
 }
 
-/* ---------- RESET ---------- */
 function resetMatch() {
   setsA = setsB = gamesA = gamesB = tieA = tieB = 0;
-  pA = pB = 0;
   tieBreak = false;
   serverIndex = 0;
   showTie(false);
   update();
 }
 
-/* ---------- ELEMENTOS ---------- */
 const setsAEl = document.getElementById('setsA');
 const setsBEl = document.getElementById('setsB');
 const gamesAEl = document.getElementById('gamesA');
 const gamesBEl = document.getElementById('gamesB');
 const tieAEl = document.getElementById('tieA');
 const tieBEl = document.getElementById('tieB');
+const btnTieA = document.getElementById('btnTieA');
+const btnTieB = document.getElementById('btnTieB');
 
 update();
 </script>
